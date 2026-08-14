@@ -1,0 +1,1706 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Payment Intent API",
+    "version": "1.0.0",
+    "description": "API для создания платежного интента"
+  },
+  "servers": [
+    {
+      "url": "https://gap.ru.payu.local/",
+      "description": "Local"
+    }
+  ],
+  "paths": {
+    "/api/intent/": {
+      "post": {
+        "summary": "Создание платежного интента",
+        "description": "Создает новый платежный интент с указанными параметрами",
+        "operationId": "createIntent",
+        "tags": [
+          "Intents"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Интент успешно создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/intent/{uuid}/": {
+      "get": {
+        "summary": "Получение платежного намерения",
+        "description": "Возвращает информацию о платежном намерении по его UUID",
+        "operationId": "getIntentById",
+        "tags": [
+          "Intents"
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "description": "UUID платежного намерения",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Платежное намерение успешно найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntentResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Платежное намерение не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse404"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Платежное намерение уже оплачено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse409"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Платежное намерение устарело",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse410"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Обновление платежного намерения",
+        "description": "Частичное обновление платежного намерения по его UUID с использованием JSON Patch",
+        "operationId": "updateIntent",
+        "tags": [
+          "Intents"
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "description": "UUID платежного намерения",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Массив операций JSON Patch для обновления",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 20,
+                "description": "Массив операций JSON Patch (от 1 до 20 операций)",
+                "items": {
+                  "$ref": "#/components/schemas/PatchOperation"
+                }
+              },
+              "example": [
+                {
+                  "op": "replace",
+                  "path": "/tokenize",
+                  "value": true
+                },
+                {
+                  "op": "replace",
+                  "path": "/receiptEmail",
+                  "value": "newemail@example.com"
+                }
+              ]
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Платежное намерение успешно обновлено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Платежное намерение не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse404"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Платежное намерение уже оплачено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse409"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Платежное намерение устарело",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse410"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/intent/{uuid}/status/": {
+      "get": {
+        "summary": "Получение статуса оплаты по намерению",
+        "description": "Возвращает текущий статус платежного намерения и список связанных транзакций",
+        "operationId": "getIntentStatus",
+        "tags": [
+          "Intents"
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "description": "UUID платежного намерения",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Статус платежного намерения успешно получен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntentStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Платежное намерение не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/intent/pay/": {
+      "post": {
+        "summary": "Оплата картой",
+        "description": "Выполняет оплату по платежному намерению с использованием данных карты",
+        "operationId": "payWithCard",
+        "tags": [
+          "IntentPay"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardPaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Платеж успешно авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntentStatusResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Для авторизации требуется прохождение 3DS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThreeDSResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Платежное намерение не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/intent/pay/key/": {
+      "get": {
+        "summary": "Получение публичного ключа для шифрования криптограммы",
+        "description": "Возвращает публичный ключ (RSA) для шифрования данных карты при оплате",
+        "operationId": "getPublicKey",
+        "tags": [
+          "IntentPay"
+        ],
+        "responses": {
+          "200": {
+            "description": "Публичный ключ успешно получен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicKeyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alt/{uuid}/{view}/{method}/": {
+      "get": {
+        "summary": "Оплата AltPay",
+        "description": "Возвращает QR-код или ссылку для оплаты",
+        "operationId": "payWithFasterPayments",
+        "tags": [
+          "IntentPay"
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "description": "UUID платежного намерения (v6)",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          },
+          {
+            "name": "view",
+            "in": "path",
+            "required": true,
+            "description": "UUID платежного намерения (v6)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "link",
+                "image"
+              ],
+              "example": "link"
+            }
+          },
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "description": "Метод оплаты",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "FasterPayments",
+                "SberPay",
+                "AlfaPay",
+                "TPay",
+                "MirPay",
+                "BNPL"
+              ],
+              "example": "FasterPayments"
+            }
+          },
+          {
+            "name": "webview",
+            "in": "query",
+            "required": false,
+            "description": "Определяет поведение при открытии ссылки:\n  - `true`\n  - `false`\nПо умолчанию: `false`\n",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": "false"
+            },
+            "example": "true"
+          },
+          {
+            "name": "puid",
+            "in": "query",
+            "required": false,
+            "description": "Пользовательский идентификатор (Payment User ID) – UUID v4/v6.\nДлина от 1 до 36 символов.\n",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "minLength": 1,
+              "maxLength": 36,
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          {
+            "name": "schema",
+            "in": "query",
+            "required": false,
+            "description": "Параметр определяется выбранным пользователем банком, при оплате СПБ с мобильного устройства.\nВ оригинальной ссылке оплаты NSPK будет подменена схема для открытия ссылки в приложении банка или на сайте банка.\n",
+            "schema": {
+              "type": "string",
+              "example": "bank0000001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Данные для оплаты через СБП успешно получены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FasterPaymentsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Платежное намерение не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/intent/{uuid}/send-sms/": {
+      "post": {
+        "summary": "Отправить СМС для SberPay",
+        "description": "Возвращает результат отправки СМС",
+        "operationId": "payWithSMS",
+        "tags": [
+          "IntentPay"
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "description": "UUID платежного намерения (v6)",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "phone"
+                ],
+                "properties": {
+                  "phone": {
+                    "type": "string",
+                    "pattern": "^79[0-9]{9}$",
+                    "description": "Номер телефона в формате 79XXXXXXXXX",
+                    "example": "79123456789"
+                  }
+                }
+              },
+              "example": {
+                "phone": "79123456789"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успешный ответ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "phone"
+                  ],
+                  "properties": {
+                    "phone": {
+                      "type": "string",
+                      "pattern": "^79[0-9]{9}$",
+                      "description": "Номер телефона в формате 79XXXXXXXXX",
+                      "example": "79123456789"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Платежное намерение не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/intent/{uuid}/bin-info/{bin}/": {
+      "get": {
+        "summary": "Получение информации по BIN",
+        "tags": [
+          "IntentPay"
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID платежного намерения"
+          },
+          {
+            "name": "bin",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$"
+            },
+            "description": "Первые 6 цифр карты"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ по BIN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cardType": {
+                      "type": "string",
+                      "example": "Visa"
+                    },
+                    "countryCode": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": null
+                    },
+                    "bankId": {
+                      "type": "integer",
+                      "example": 4
+                    },
+                    "bankName": {
+                      "type": "string",
+                      "example": "BRD"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateIntentRequest": {
+        "type": "object",
+        "required": [
+          "merchantCode",
+          "amount",
+          "currency",
+          "messageScheme"
+        ],
+        "properties": {
+          "merchantCode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Публичный идентификатор терминала мерчанта",
+            "example": "widget"
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 999999999,
+            "description": "Сумма платежа в минорных единицах (копейках/центах)",
+            "example": 1000
+          },
+          "currency": {
+            "type": "string",
+            "description": "Код валюты (RUB, USD, EUR и т.д.)",
+            "example": "RUB"
+          },
+          "messageScheme": {
+            "type": "string",
+            "enum": [
+              "SMS",
+              "DMS"
+            ],
+            "description": "Схема обработки платежа (SMS - одностадийная, DMS - двухстадийная)",
+            "example": "SMS"
+          },
+          "culture": {
+            "type": "string",
+            "enum": [
+              "ru-RU",
+              "en-US"
+            ],
+            "description": "Язык интерфейса",
+            "example": "ru-RU"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Описание платежа",
+            "example": "Оплата заказа №123"
+          },
+          "merchantPaymentReference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Внешний идентификатор заказа",
+            "example": "order_123456"
+          },
+          "receiptEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "Email для отправки чека",
+            "example": "customer@example.com"
+          },
+          "accountId": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Внешний идентификатор плательщика",
+            "example": "user_123"
+          },
+          "autoClose": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 10,
+            "description": "Время автоматического закрытия в секундах",
+            "example": 5
+          },
+          "orderTimeout": {
+            "type": "integer",
+            "minimum": 1200,
+            "maximum": 604800,
+            "description": "Время жизни сессии в секундах",
+            "example": 3600
+          },
+          "retryPayment": {
+            "type": "boolean",
+            "description": "Флаг возможности повторной оплаты",
+            "example": false
+          },
+          "tokenize": {
+            "type": "boolean",
+            "description": "Флаг токенизации карты",
+            "example": false
+          },
+          "scenario": {
+            "type": "string",
+            "enum": [
+              "Widget"
+            ],
+            "description": "Сценарий оплаты",
+            "example": "Widget"
+          },
+          "skin": {
+            "type": "string",
+            "enum": [
+              "Classic",
+              "Modern"
+            ],
+            "description": "Тема виджета (Classic - светлая, Modern - темная)",
+            "example": "Classic"
+          },
+          "emailBehavior": {
+            "type": "string",
+            "enum": [
+              "Required",
+              "Hidden",
+              "Optional"
+            ],
+            "description": "Политика запроса email",
+            "example": "Optional"
+          },
+          "successRedirectUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL для перенаправления при успешной оплате",
+            "example": "https://example.com/success"
+          },
+          "failRedirectUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL для перенаправления при неуспешной оплате",
+            "example": "https://example.com/fail"
+          },
+          "restrictedPaymentMethods": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Card",
+                "FasterPayments",
+                "SberPay",
+                "AlfaPay",
+                "MirPay",
+                "TPay",
+                "BNPL"
+              ]
+            },
+            "description": "Список запрещенных методов оплаты",
+            "example": [
+              "BNPL"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "Список товаров в заказе",
+            "items": {
+              "$ref": "#/components/schemas/ProductItem"
+            }
+          },
+          "receipts": {
+            "type": "object",
+            "description": "Данные чеков в свободном формате",
+            "additionalProperties": true,
+            "x-max-size": 1048576
+          },
+          "userInfo": {
+            "$ref": "#/components/schemas/UserInfo"
+          },
+          "metaData": {
+            "type": "object",
+            "description": "Метаданные в свободном формате",
+            "additionalProperties": true,
+            "x-max-size": 1048576
+          }
+        }
+      },
+      "IntentResponse": {
+        "description": "Объект платежного интента",
+        "required": [
+          "id",
+          "status",
+          "secret",
+          "createdAt",
+          "updatedAt",
+          "expiredAt",
+          "merchantCode",
+          "amount",
+          "currency",
+          "messageScheme"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Уникальный идентификатор интента",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Pending",
+              "Expired",
+              "Failed",
+              "Success"
+            ],
+            "description": "Статус намерения (по умолчанию Pending)",
+            "example": "Pending"
+          },
+          "secret": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Секретный ключ интента",
+            "example": "987fcdeb-51a2-43d7-9b56-123456789012"
+          },
+          "createdAt": {
+            "type": "integer",
+            "description": "Timestamp создания интента",
+            "example": 1772720518
+          },
+          "updatedAt": {
+            "type": "integer",
+            "description": "Timestamp последнего обновления",
+            "example": 1772788635
+          },
+          "expiredAt": {
+            "type": "integer",
+            "description": "Timestamp истечения срока действия",
+            "example": 1788619318
+          },
+          "merchantCode": {
+            "type": "string",
+            "description": "Публичный идентификатор терминала",
+            "example": "widget"
+          },
+          "amount": {
+            "type": "integer",
+            "description": "Сумма платежа в минорных единицах",
+            "example": 1000
+          },
+          "currency": {
+            "type": "string",
+            "description": "Код валюты",
+            "example": "RUB"
+          },
+          "messageScheme": {
+            "type": "string",
+            "enum": [
+              "SMS",
+              "DMS"
+            ],
+            "description": "Схема обработки платежа",
+            "example": "SMS"
+          },
+          "culture": {
+            "type": "string",
+            "enum": [
+              "ru-RU",
+              "en-US"
+            ],
+            "description": "Язык интерфейса",
+            "example": "ru-RU"
+          },
+          "description": {
+            "type": "string",
+            "description": "Описание платежа",
+            "example": "Оплата заказа №123"
+          },
+          "merchantPaymentReference": {
+            "type": "string",
+            "description": "Внешний идентификатор заказа",
+            "example": "order_123456"
+          },
+          "receiptEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "Email для чека",
+            "example": "customer@example.com"
+          },
+          "accountId": {
+            "type": "string",
+            "description": "Идентификатор плательщика",
+            "example": "user_123"
+          },
+          "autoClose": {
+            "type": "integer",
+            "description": "Время автозакрытия (сек)",
+            "example": 5
+          },
+          "orderTimeout": {
+            "type": "integer",
+            "description": "Время жизни сессии (сек)",
+            "example": 3600
+          },
+          "retryPayment": {
+            "type": "boolean",
+            "description": "Флаг повторной оплаты",
+            "example": false
+          },
+          "tokenize": {
+            "type": "boolean",
+            "description": "Флаг токенизации",
+            "example": false
+          },
+          "scenario": {
+            "type": "string",
+            "enum": [
+              "Widget"
+            ],
+            "description": "Сценарий оплаты",
+            "example": "Widget"
+          },
+          "skin": {
+            "type": "string",
+            "enum": [
+              "Classic",
+              "Modern"
+            ],
+            "description": "Тема виджета",
+            "example": "Classic"
+          },
+          "emailBehavior": {
+            "type": "string",
+            "enum": [
+              "Required",
+              "Hidden",
+              "Optional"
+            ],
+            "description": "Политика email",
+            "example": "Optional"
+          },
+          "successRedirectUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL успеха",
+            "example": "https://example.com/success"
+          },
+          "failRedirectUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL неудачи",
+            "example": "https://example.com/fail"
+          },
+          "restrictedPaymentMethods": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Card",
+                "FasterPayments",
+                "SberPay",
+                "AlfaPay",
+                "MirPay",
+                "TPay",
+                "BNPL"
+              ]
+            },
+            "description": "Запрещенные методы оплаты",
+            "example": [
+              "BNPL"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "description": "Список товаров",
+            "items": {
+              "$ref": "#/components/schemas/ProductItem"
+            }
+          },
+          "receipts": {
+            "type": "object",
+            "description": "Данные чеков",
+            "additionalProperties": true
+          },
+          "userInfo": {
+            "$ref": "#/components/schemas/UserInfo"
+          },
+          "metaData": {
+            "type": "object",
+            "description": "Метаданные",
+            "additionalProperties": true
+          },
+          "paymentMethods": {
+            "type": "array",
+            "description": "Список доступных методов оплаты",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "Card",
+                    "FasterPayments",
+                    "SberPay",
+                    "AlfaPay",
+                    "MirPay",
+                    "TPay",
+                    "BNPL"
+                  ],
+                  "description": "Тип метода оплаты",
+                  "example": "FasterPayments"
+                }
+              }
+            }
+          },
+          "terminalInfo": {
+            "type": "object",
+            "description": "Информация о терминале",
+            "properties": {
+              "logoUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL логотипа терминала",
+                "example": ""
+              },
+              "displayAdvertiseBannerOnWidget": {
+                "type": "boolean",
+                "description": "Флаг отображения рекламного баннера",
+                "example": false
+              },
+              "terminalUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL терминала",
+                "example": ""
+              },
+              "bannerImage": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL изображения рекламного баннера",
+                "example": ""
+              },
+              "bannerLink": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL рекламной ссылки",
+                "example": ""
+              }
+            }
+          },
+          "transactions": {
+            "type": "array",
+            "description": "Список транзакций по интенту",
+            "items": {
+              "type": "object",
+              "description": "Объект транзакции"
+            },
+            "example": []
+          }
+        }
+      },
+      "IntentStatusResponse": {
+        "type": "object",
+        "description": "Ответ с текущим статусом платежного намерения",
+        "required": [
+          "intent",
+          "transactions"
+        ],
+        "properties": {
+          "intent": {
+            "type": "object",
+            "description": "Объект с информацией о статусе интента",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "Pending",
+                  "Expired",
+                  "Failed",
+                  "Success"
+                ],
+                "description": "Текущий статус платежного намерения",
+                "example": "Pending"
+              }
+            }
+          },
+          "transactions": {
+            "type": "array",
+            "description": "Список транзакций по данному интенту",
+            "items": {
+              "type": "object",
+              "description": "Объект транзакции (структура будет добавлена позже)"
+            },
+            "example": []
+          }
+        }
+      },
+      "PatchOperation": {
+        "type": "object",
+        "description": "Операция JSON Patch для обновления поля",
+        "required": [
+          "op",
+          "path",
+          "value"
+        ],
+        "properties": {
+          "op": {
+            "type": "string",
+            "enum": [
+              "replace"
+            ],
+            "description": "Тип операции (только \"replace\")",
+            "example": "replace"
+          },
+          "path": {
+            "type": "string",
+            "enum": [
+              "/tokenize",
+              "/receiptEmail"
+            ],
+            "description": "Путь к полю для обновления",
+            "example": "/tokenize"
+          },
+          "value": {
+            "oneOf": [
+              {
+                "type": "boolean",
+                "description": "Значение для поля tokenize",
+                "example": true
+              },
+              {
+                "type": "string",
+                "format": "email",
+                "nullable": true,
+                "description": "Email для поля receiptEmail (может быть null)",
+                "example": "customer@example.com"
+              }
+            ],
+            "description": "Новое значение поля"
+          }
+        }
+      },
+      "CardPaymentRequest": {
+        "type": "object",
+        "description": "Запрос на оплату картой",
+        "required": [
+          "id",
+          "paymentMethod",
+          "cryptogram"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID платежного намерения (v6)",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "Card"
+            ],
+            "description": "Метод оплаты (только Card)",
+            "example": "Card"
+          },
+          "cryptogram": {
+            "type": "string",
+            "format": "byte",
+            "description": "Base64-закодированный криптограмма с данными карты и информацией о браузере",
+            "example": "eyJUeXBlIjoiQ2FyZCIsIkJyb3dzZXJJbmZvQmFzZTY0IjoiZXlKd2FHOXpkR2xrWVhScGIyNGlPaUp...",
+            "x-encoding": "base64"
+          }
+        }
+      },
+      "ThreeDSResponse": {
+        "type": "object",
+        "description": "Ответ с публичным ключом для шифрования",
+        "required": [
+          "threeDsUrl"
+        ],
+        "properties": {
+          "threeDsUrl": {
+            "type": "string",
+            "description": "Ссылка для редиректа пользователя на страницу 3DS",
+            "example": "https://3ds-bank.com/auth/3ds-verify"
+          }
+        }
+      },
+      "PublicKeyResponse": {
+        "type": "object",
+        "description": "Ответ с публичным ключом для шифрования",
+        "required": [
+          "publicKey"
+        ],
+        "properties": {
+          "publicKey": {
+            "type": "string",
+            "description": "Публичный ключ в формате PEM (RSA)",
+            "example": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCYZM6Zxpg\nH2oQ9X7cQqN6GqX7QKQyXhR8q5WvQX9nYzYJQgZ8FQxVXyQrWUQxZqWvXjHn\n/tdu0fCegeST6DMon/CHEBT7avaBMTy6bgF4oo6fG/FnfHS5ypZWX+UKGQ6Xjqv0\nciJyuwQkTxCo6ss4J8qXTWti1w8IvMwrauRcfLRCrZTKiLOVUbE56oFdzSS8wQbV\n/wIDAQAB\n-----END PUBLIC KEY-----\n",
+            "x-format": "pem",
+            "x-algorithm": "RSA"
+          }
+        }
+      },
+      "FasterPaymentsResponse": {
+        "description": "Ответ зависит от параметра `view` в запросе:\n- При `view=link` – возвращается JSON-строка с URL\n- При `view=image` – возвращается бинарное изображение (PNG/SVG)\n",
+        "oneOf": [
+          {
+            "type": "string",
+            "format": "uri",
+            "description": "Ссылка для оплаты через СБП (при view=link)",
+            "example": "https://qr.nspk.ru/AS10001HGJKBHJK25LKNGLKJ4LKN4LKN"
+          },
+          {
+            "type": "string",
+            "format": "binary",
+            "description": "QR-код в формате PNG или SVG (при view=image)",
+            "example": "[binary image data]"
+          }
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Ответ при ошибке валидации запроса (HTTP 400)",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Сообщение об ошибке с детальным описанием проблемы",
+            "example": "Total sum of products (price * quantity) must equal payment amount of 2004"
+          }
+        }
+      },
+      "ErrorResponse404": {
+        "type": "object",
+        "description": "Ответ при ненайденном ресурсе (HTTP 404)",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Сообщение об ошибке",
+            "example": "Intent not found"
+          }
+        }
+      },
+      "ErrorResponse409": {
+        "type": "object",
+        "description": "Ответ при запросе оплаченого интента (HTTP 409)",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Сообщение об ошибке",
+            "example": "Intent already paid. ID: 123e4567-e89b-12d3-a456-426614174000"
+          }
+        }
+      },
+      "ErrorResponse410": {
+        "type": "object",
+        "description": "Ответ при запросе устаревшего ресурса (HTTP 410)",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Сообщение об ошибке",
+            "example": "Intent expired. ID: 123e4567-e89b-12d3-a456-426614174000"
+          }
+        }
+      },
+      "ErrorResponse500": {
+        "type": "object",
+        "description": "Внутренняя ошибка сервера (HTTP 500)",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Сообщение об ошибке",
+            "example": "Internal server error"
+          }
+        }
+      },
+      "ErrorResponse502": {
+        "type": "object",
+        "description": "Ошибка авторизации платежа (HTTP 502)",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Сообщение об ошибке",
+            "example": "Internal server error"
+          }
+        }
+      },
+      "ProductItem": {
+        "type": "object",
+        "required": [
+          "name",
+          "sku",
+          "unitPrice",
+          "quantity"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Наименование товара",
+            "example": "Смартфон"
+          },
+          "sku": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Артикул товара",
+            "example": "PHONE-123"
+          },
+          "unitPrice": {
+            "type": "string",
+            "pattern": "^\\d{1,7}$",
+            "description": "Цена за единицу товара (строкой, не более 9999999)",
+            "example": "10000"
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^\\d{1,5}$",
+            "description": "Количество товара (строкой, не более 99999)",
+            "example": "2"
+          },
+          "additionalDetails": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Дополнительная информация о товаре",
+            "example": "Черный, 128GB"
+          },
+          "vat": {
+            "type": "string",
+            "enum": [
+              "0",
+              "5",
+              "7",
+              "10",
+              "22"
+            ],
+            "description": "Ставка НДС",
+            "example": "22"
+          },
+          "marketplace": {
+            "type": "object",
+            "description": "Информация о маркетплейсе",
+            "required": [
+              "merchantCode"
+            ],
+            "properties": {
+              "merchantCode": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Код мерчанта в маркетплейсе",
+                "example": "MERCHANT-001"
+              }
+            }
+          }
+        }
+      },
+      "UserInfo": {
+        "type": "object",
+        "description": "Информация о пользователе (плательщике)",
+        "properties": {
+          "billing": {
+            "$ref": "#/components/schemas/Billing"
+          }
+        },
+        "example": {
+          "billing": {
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "test@test.ru",
+            "countryCode": "RU",
+            "phone": "771346934",
+            "city": "Москва",
+            "state": "Moscow",
+            "companyName": "Test",
+            "taxId": "example",
+            "addressLine1": "Улица Пушкина",
+            "addressLine2": "Дом 10",
+            "zipCode": "101000"
+          }
+        }
+      },
+      "Billing": {
+        "type": "object",
+        "description": "Платежная информация клиента (Плательщика)",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "description": "Имя Плательщика",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Фамилия Плательщика",
+            "example": "Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Почта Плательщика",
+            "example": "test@ypmn.ru"
+          },
+          "countryCode": {
+            "type": "string",
+            "description": "Код страны",
+            "minLength": 2,
+            "maxLength": 2,
+            "example": "RU"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Телефонный номер Плательщика",
+            "example": "771346934"
+          },
+          "city": {
+            "type": "string",
+            "description": "Город Плательщика",
+            "example": "Москва"
+          },
+          "state": {
+            "type": "string",
+            "description": "Область или регион",
+            "example": "Moscow"
+          },
+          "companyName": {
+            "type": "string",
+            "description": "Название компании Плательщика",
+            "example": "Тест"
+          },
+          "taxId": {
+            "type": "string",
+            "description": "ИНН компании Плательщика",
+            "example": "example"
+          },
+          "addressLine1": {
+            "type": "string",
+            "description": "Адрес (первая строка)",
+            "example": "Улица Пушкина"
+          },
+          "addressLine2": {
+            "type": "string",
+            "description": "Адрес (вторая строка)",
+            "example": "Дом 10"
+          },
+          "zipCode": {
+            "type": "string",
+            "description": "Почтовый индекс",
+            "example": "101000"
+          }
+        }
+      },
+      "CryptogramData": {
+        "type": "object",
+        "description": "Расшифрованные данные криптограммы",
+        "required": [
+          "Type",
+          "BrowserInfoBase64",
+          "CardInfo",
+          "KeyVersion",
+          "Value"
+        ],
+        "properties": {
+          "Type": {
+            "type": "string",
+            "enum": [
+              "Card"
+            ],
+            "description": "Тип платежного метода",
+            "example": "Card"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Дополнительные метаданные (опционально)",
+            "example": {}
+          },
+          "BrowserInfoBase64": {
+            "type": "string",
+            "format": "byte",
+            "description": "Base64-закодированная информация о браузере",
+            "example": "eyJBY2NlcHRIZWFkZXIiOiJhcHBsaWNhdGlvbi9qc29uIn0="
+          },
+          "CardInfo": {
+            "$ref": "#/components/schemas/CardInfo"
+          },
+          "KeyVersion": {
+            "type": "integer",
+            "description": "Версия ключа шифрования",
+            "example": 1
+          },
+          "Value": {
+            "type": "string",
+            "format": "byte",
+            "description": "Base64-закодированные данные карты (PAN и CVV)",
+            "example": "eyJQQU4iOiI0MTExMTExMTExMTExMTExIiwiY3Z2IjoiMTIzIn0="
+          }
+        }
+      },
+      "BrowserInfoBase64": {
+        "type": "string",
+        "format": "byte",
+        "description": "Base64-закодированная информация о браузере",
+        "example": "eyJBY2NlcHRIZWFkZXIiOiJhcHBsaWNhdGlvbi9qc29uIn0="
+      },
+      "DecodedBrowserInfo": {
+        "type": "object",
+        "description": "Расшифрованная информация о браузере",
+        "required": [
+          "AcceptHeader",
+          "ColorDepth",
+          "IpAddress",
+          "Language",
+          "ScreenHeight",
+          "ScreenWidth",
+          "TimeZone",
+          "UserAgent",
+          "JavaEnabled",
+          "JavaScriptEnabled"
+        ],
+        "properties": {
+          "AcceptHeader": {
+            "type": "string",
+            "description": "HTTP Accept header",
+            "example": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+          },
+          "ColorDepth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 48,
+            "description": "Глубина цвета экрана в битах",
+            "example": 24
+          },
+          "IpAddress": {
+            "type": "string",
+            "format": "ip",
+            "description": "IP-адрес пользователя",
+            "example": "192.168.1.1"
+          },
+          "Language": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(-[A-Z]{2})?(-[A-Z][a-z]{2,3}-[A-Z]{2})?$",
+            "description": "Языковая метка IETF",
+            "example": "ru-RU"
+          },
+          "ScreenHeight": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 10000,
+            "description": "Высота экрана в пикселях",
+            "example": 1080
+          },
+          "ScreenWidth": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 10000,
+            "description": "Ширина экрана в пикселях",
+            "example": 1920
+          },
+          "TimeZone": {
+            "type": "integer",
+            "minimum": -720,
+            "maximum": 840,
+            "description": "Смещение часового пояса в минутах от UTC",
+            "example": 180
+          },
+          "UserAgent": {
+            "type": "string",
+            "description": "User-Agent браузера",
+            "example": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+          },
+          "JavaEnabled": {
+            "type": "boolean",
+            "description": "Флаг поддержки Java",
+            "example": false
+          },
+          "JavaScriptEnabled": {
+            "type": "boolean",
+            "description": "Флаг поддержки JavaScript",
+            "example": true
+          }
+        }
+      },
+      "CardInfo": {
+        "type": "object",
+        "description": "Информация о карте (нечувствительные данные)",
+        "required": [
+          "FirstSixDigits",
+          "LastFourDigits",
+          "ExpDateYear",
+          "ExpDateMonth"
+        ],
+        "properties": {
+          "FirstSixDigits": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 6,
+            "description": "Первые 6 цифр номера карты (BIN)",
+            "example": "411111"
+          },
+          "LastFourDigits": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 4,
+            "description": "Последние 4 цифры номера карты",
+            "example": "1111"
+          },
+          "ExpDateYear": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2,
+            "description": "Год истечения срока действия (последние 2 цифры)",
+            "example": "25"
+          },
+          "ExpDateMonth": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2,
+            "description": "Месяц истечения срока действия (2 цифры)",
+            "example": "12"
+          }
+        }
+      },
+      "DecryptedCardValue": {
+        "type": "object",
+        "description": "Расшифрованные данные карты (чувствительные)",
+        "required": [
+          "PAN",
+          "cvv"
+        ],
+        "properties": {
+          "PAN": {
+            "type": "string",
+            "description": "Полный номер карты (проверка по алгоритму Луна)",
+            "example": "4111111111111111"
+          },
+          "cvv": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 4,
+            "pattern": "^\\d+$",
+            "description": "CVV код карты (3 или 4 цифры)",
+            "example": "123"
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Неверный запрос",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}
