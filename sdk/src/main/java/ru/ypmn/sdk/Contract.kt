@@ -28,6 +28,8 @@ data class CreateIntentRequest(
     val orderTimeout: Int? = null,
     val retryPayment: Boolean? = null,
     val tokenize: Boolean? = null,
+    /** Флоу токенизации: Force игнорирует tokenize; Optional делает токенизацию опциональной. */
+    val tokenizationFlow: String? = null,  // "Force" | "Optional"
     /** Сценарий оплаты ("Widget" | "WebSDK" | "AndroidSDK" | "IoSSDK"). null → YP.createIntent подставит "AndroidSDK". */
     val scenario: String? = null,
     // Поля хостед-страниц (widget/checkout): бэкенд их принимает из любого канала,
@@ -59,6 +61,7 @@ data class CreateIntentRequest(
         private var orderTimeout: Int? = null
         private var retryPayment: Boolean? = null
         private var tokenize: Boolean? = null
+        private var tokenizationFlow: String? = null
         private var scenario: String? = null
         private var skin: String? = null
         private var emailBehavior: String? = null
@@ -80,6 +83,7 @@ data class CreateIntentRequest(
         fun orderTimeout(v: Int?) = apply { orderTimeout = v }
         fun retryPayment(v: Boolean?) = apply { retryPayment = v }
         fun tokenize(v: Boolean?) = apply { tokenize = v }
+        fun tokenizationFlow(v: String?) = apply { tokenizationFlow = v }
         fun scenario(v: String?) = apply { scenario = v }
         fun skin(v: String?) = apply { skin = v }
         fun emailBehavior(v: String?) = apply { emailBehavior = v }
@@ -97,7 +101,8 @@ data class CreateIntentRequest(
             messageScheme = messageScheme, culture = culture, description = description,
             merchantPaymentReference = merchantPaymentReference, receiptEmail = receiptEmail, accountId = accountId,
             autoClose = autoClose, orderTimeout = orderTimeout, retryPayment = retryPayment,
-            tokenize = tokenize, scenario = scenario, skin = skin, emailBehavior = emailBehavior,
+            tokenize = tokenize, tokenizationFlow = tokenizationFlow, scenario = scenario,
+            skin = skin, emailBehavior = emailBehavior,
             paymentUrl = paymentUrl, successRedirectUrl = successRedirectUrl,
             failRedirectUrl = failRedirectUrl, restrictedPaymentMethods = restrictedPaymentMethods,
             items = items, receipts = receipts, userInfo = userInfo, metaData = metaData,
@@ -157,6 +162,8 @@ data class IntentResponse(
     val description: String? = null,
     val receiptEmail: String? = null,
     val tokenize: Boolean? = null,
+    /** Флоу токенизации: Force игнорирует tokenize; Optional делает токенизацию опциональной. */
+    val tokenizationFlow: String? = null,
     val paymentMethods: List<PaymentMethodDto>? = null,
     val transactions: List<Transaction>? = null,
 )

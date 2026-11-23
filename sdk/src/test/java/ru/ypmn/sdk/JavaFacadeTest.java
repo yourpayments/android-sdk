@@ -24,6 +24,10 @@ public class JavaFacadeTest {
 
         YpConfig config = new YpConfig(server.url("/").toString(), Collections.emptyMap());
         CreateIntentRequest req = CreateIntentRequest.builder("t1", 1L, "RUB", "SMS").build();
+        CreateIntentRequest tokenizationReq = CreateIntentRequest.builder("t1", 1L, "RUB", "SMS")
+                .tokenizationFlow("Force")
+                .build();
+        assertEquals("Force", tokenizationReq.getTokenizationFlow());
 
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Intent> result = new AtomicReference<>();

@@ -146,6 +146,7 @@ SDK на другой платформе (Swift/iOS).
 | `orderTimeout` | `Int?` | нет | TTL заказа (сек). |
 | `retryPayment` | `Boolean?` | нет | Разрешить повторные попытки. |
 | `tokenize` | `Boolean?` | нет | Токенизировать карту. |
+| `tokenizationFlow` | `String?` | нет | Флоу токенизации: `"Force"` (обязательная, `tokenize` игнорируется) или `"Optional"` (опциональная). |
 | `scenario` | `String?` | нет | `"Widget"` \| `"WebSDK"` \| `"AndroidSDK"` \| `"IoSSDK"`; `null` → `YP.createIntent` подставляет `"AndroidSDK"`. |
 | `skin` | `String?` | нет | `"Classic"` \| `"Modern"` (хостед-страницы). |
 | `emailBehavior` | `String?` | нет | `"Required"` \| `"Hidden"` \| `"Optional"` (хостед-страницы). |
@@ -174,6 +175,7 @@ Java-эргономика: `CreateIntentRequest.builder(merchantCode, amount, cu
 | `description` | `String?` | Описание. |
 | `receiptEmail` | `String?` | E-mail. |
 | `tokenize` | `Boolean?` | Токенизация. |
+| `tokenizationFlow` | `String?` | Флоу токенизации: `"Force"` или `"Optional"`. |
 | `paymentMethods` | `List<PaymentMethodDto>?` | Доступные методы оплаты. |
 | `transactions` | `List<Transaction>?` | Транзакции: `{ id: Long, status: "PENDING"\|"AUTHORIZED"\|"DECLINED", puid: String? }`. `DECLINED` отсутствует в openapi (спека отстаёт), подтверждён бэкендом — по нему `waitForResult(puid)` детектит неуспех попытки. |
 
@@ -302,6 +304,7 @@ OAEP: digest SHA-256, MGF1 SHA-256, label пустой (PSpecified.DEFAULT)
 3. Собрать конверт (порядок ключей важен):
    ```json
    {
+     "uuid": "<intent_id>",
      "Type": "Card",
      "BrowserInfoBase64": "<base64(JSON BrowserInfo)>",
      "CardInfo": {

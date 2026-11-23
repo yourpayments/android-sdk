@@ -725,6 +725,15 @@
             "description": "Флаг токенизации карты",
             "example": false
           },
+          "tokenizationFlow": {
+            "type": "string",
+            "enum": [
+              "Force",
+              "Optional"
+            ],
+            "description": "Флоу токенизации: Force — обязательная токенизация (значение tokenize игнорируется), Optional — опциональная токенизация",
+            "example": "Optional"
+          },
           "scenario": {
             "type": "string",
             "enum": [
@@ -935,6 +944,15 @@
             "type": "boolean",
             "description": "Флаг токенизации",
             "example": false
+          },
+          "tokenizationFlow": {
+            "type": "string",
+            "enum": [
+              "Force",
+              "Optional"
+            ],
+            "description": "Флоу токенизации: Force — обязательная токенизация (значение tokenize игнорируется), Optional — опциональная токенизация",
+            "example": "Optional"
           },
           "scenario": {
             "type": "string",
@@ -1500,6 +1518,7 @@
         "type": "object",
         "description": "Расшифрованные данные криптограммы",
         "required": [
+          "uuid",
           "Type",
           "BrowserInfoBase64",
           "CardInfo",
@@ -1507,6 +1526,12 @@
           "Value"
         ],
         "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID платежного интента",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
           "Type": {
             "type": "string",
             "enum": [

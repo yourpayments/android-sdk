@@ -268,7 +268,7 @@ PAN/CVV уходят только в криптограмме.
 ```
 Cipher: "RSA/ECB/OAEPWithSHA-256AndMGF1Padding"   // == crypto.subtle RSA-OAEP, SHA-256
 Шифруемый payload: JSON {"PAN": "<digits>", "cvv": "<digits>"}   // только PAN+CVV
-Конверт: { Type:"Card", BrowserInfoBase64:"" (как CP), CardInfo{FirstSixDigits,LastFourDigits,ExpDateYear,ExpDateMonth}, KeyVersion, Value }
+Конверт: { uuid:"<intent_id>", Type:"Card", BrowserInfoBase64:"" (как CP), CardInfo{FirstSixDigits,LastFourDigits,ExpDateYear,ExpDateMonth}, KeyVersion, Value }
 Внешняя обёртка: base64(JSON(конверт))            // == strToBase64(JSON.stringify(...))
 ```
 
@@ -276,7 +276,7 @@ Cipher: "RSA/ECB/OAEPWithSHA-256AndMGF1Padding"   // == crypto.subtle RSA-OAEP, 
   иначе `FirstSixDigits` ломается.
 - `KeyVersion` — по умолчанию 1 (как web-sdk; не CP-шный "04").
 - Публичный ключ берём из `getPublicKey` (API), кэшируем в сессии.
-- **Cross-language test-vector** (обязательно): фикс `(publicKey, card)` → проверяем,
+- **Cross-language test-vector** (обязательно): фикс `(publicKey, uuid, card)` → проверяем,
   что структура конверта Kotlin совпадает с TS (Type, набор полей CardInfo, что
   Value — валидный OAEP-base64, что внешняя обёртка декодится в тот же JSON).
 

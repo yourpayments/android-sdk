@@ -1,5 +1,8 @@
 package ru.ypmn.sdk
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.*
+import okio.ByteString.Companion.decodeBase64
+import okio.ByteString.Companion.toByteString
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -34,5 +37,21 @@ class PayTest {
         server.enqueue(MockResponse().setBody("""{"threeDsUrl":"https://acs.example/3ds"}"""))
         val r = i.pay(PayInput.Cryptogram("CRYPTO"))
         assertEquals(PayResult.ThreeDsRequired("https://acs.example/3ds"), r)
+    }
+
+    @Test fun pay_with_card_puts_intent_id_in_cryptogram() = runTest {
+        val i = intent()
+        val kp = java.security.KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
+        val pem = "-----BEGIN PUBLIC KEY-----\n" +
+            kp.public.encoded.toByteString().base64() + "\n-----END PUBLIC KEY-----"
+        server.enqueue(MockResponse().setBody("""{"publicKey":"$pem","version":2}"""))
+        server.enqueue(MockResponse().setBody("""{"intent":{"status":"Success"},"transactions":[]}"""))
+
+        i.pay(PayInput.Card(CardData("4652 0354 4066 7037", "12", "25", "123")))
+        server.takeRequest() // GET public key
+        val payBody = Json.parseToJsonElement(server.takeRequest().body.readUtf8()).jsonObject
+        val cryptogram = payBody["cryptogram"]!!.jsonPrimitive.content
+        val envelope = Json.parseToJsonElement(cryptogram.decodeBase64()!!.utf8()).jsonObject
+        assertEquals("i1", envelope["uuid"]!!.jsonPrimitive.content)
     }
 }
