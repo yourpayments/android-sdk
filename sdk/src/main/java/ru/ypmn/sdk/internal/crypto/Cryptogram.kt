@@ -24,6 +24,7 @@ internal object Cryptogram {
         @SerialName("ExpDateMonth") val expMonth: String,
     )
     @Serializable private data class Envelope(
+        val uuid: String,
         @SerialName("Type") val type: String = "Card",
         @SerialName("BrowserInfoBase64") val browserInfoBase64: String = "",
         @SerialName("CardInfo") val cardInfo: CardInfoDto,
@@ -31,7 +32,13 @@ internal object Cryptogram {
         @SerialName("Value") val value: String,
     )
 
-    fun build(publicKeyPem: String, card: CardData, browserInfoBase64: String = "", keyVersion: Int = 1): String {
+    fun build(
+        publicKeyPem: String,
+        uuid: String,
+        card: CardData,
+        browserInfoBase64: String = "",
+        keyVersion: Int = 1,
+    ): String {
         val pan = card.pan.filter(Char::isDigit)
         val cvv = card.cvv.filter(Char::isDigit)
         val month = card.expMonth.filter(Char::isDigit)
@@ -40,6 +47,7 @@ internal object Cryptogram {
 
         val value = encryptOaep(publicKeyPem, """{"PAN":"$pan","cvv":"$cvv"}""")
         val env = Envelope(
+            uuid = uuid,
             browserInfoBase64 = browserInfoBase64,
             cardInfo = CardInfoDto(pan.take(6), pan.takeLast(4), year, month),
             keyVersion = keyVersion,

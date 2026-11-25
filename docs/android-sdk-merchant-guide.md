@@ -163,7 +163,7 @@ dependencyResolutionManagement {
 `build.gradle.kts` модуля приложения:
 
 ```kotlin
-implementation("com.github.onemantooo.android-sdk:sdk:<tag>")
+implementation("com.github.yourpayments.android-sdk:sdk:<tag>")
 ```
 
 Актуальный `<tag>` (версия релиза) вам сообщит менеджер.
@@ -221,6 +221,7 @@ val intent: Intent = YP.createIntent(
 | `orderTimeout` | `Int?` | Время жизни интента, секунды (1200–2592000). По истечении — статус `Expired` |
 | `retryPayment` | `Boolean?` | Разрешить повторные попытки после отказа |
 | `tokenize` | `Boolean?` | Токенизировать карту для будущих платежей |
+| `tokenizationFlow` | `String?` | Флоу токенизации: `"Force"` — обязательная (значение `tokenize` игнорируется), `"Optional"` — опциональная |
 | `successRedirectUrl` / `failRedirectUrl` | `String?` | URL возврата покупателя с внешних платёжных страниц (актуально для альтернативных методов) |
 | `restrictedPaymentMethods` | `List<String>?` | Запрещённые методы: `"Card"`, `"FasterPayments"`, `"SberPay"`, `"AlfaPay"`, `"MirPay"`, `"TPay"`, `"BNPL"` |
 | `items` | `List<ProductItem>?` | Состав заказа ([формат](#productitem)) |
@@ -734,6 +735,7 @@ CreateIntentRequest(
     orderTimeout: Int? = null,     // секунды, 1200–2592000
     retryPayment: Boolean? = null,
     tokenize: Boolean? = null,
+    tokenizationFlow: String? = null, // "Force" | "Optional"
     scenario: String? = null,      // null → "AndroidSDK"
     successRedirectUrl: String? = null,
     failRedirectUrl: String? = null,
@@ -787,6 +789,7 @@ data class IntentResponse(
     val amount: Long, val currency: String,
     val messageScheme: String,
     val description: String?, val receiptEmail: String?, val tokenize: Boolean?,
+    val tokenizationFlow: String?,
     val paymentMethods: List<PaymentMethodDto>?,    // доступные методы оплаты
     val transactions: List<Transaction>?,           // попытки оплаты
 )

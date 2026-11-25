@@ -93,7 +93,7 @@ Gradle-модули:
 | `ru.ypmn.sdk.internal.crypto` | internal | `Cryptogram`, `BrowserInfo` |
 | `ru.ypmn.sdk.internal.operations` | internal | функции операций (`pay`, `update`, `getStatus`, `getPaymentMethod`, `waitForResult`) |
 
-Координаты публикации (JitPack): `com.github.onemantooo.android-sdk:sdk:<tag>`.
+Координаты публикации (JitPack): `com.github.yourpayments.android-sdk:sdk:<tag>`.
 Namespace кода — `ru.ypmn.sdk` (не зависит от координат).
 
 `YP_API_URL` по умолчанию (`BuildConfig`): `https://ypmn.ru`. `minSdk 24`, `compileSdk 35`, Java 17, Kotlin 2.1.0.
@@ -364,6 +364,7 @@ sealed interface AltPayFlow {
     val receiptEmail: String? = null,
     val accountId: String? = null,
     val tokenize: Boolean? = null,
+    val tokenizationFlow: String? = null,    // "Force" | "Optional"
     val restrictedPaymentMethods: List<String>? = null,
 )
 ```
@@ -386,6 +387,7 @@ sealed interface AltPayFlow {
     val description: String? = null,
     val receiptEmail: String? = null,
     val tokenize: Boolean? = null,
+    val tokenizationFlow: String? = null,    // "Force" | "Optional"
     val paymentMethods: List<PaymentMethodDto>? = null,
     val transactions: List<JsonObject>? = null,   // непрозрачные объекты, не типизированы
 )
@@ -654,7 +656,7 @@ enqueue {
       when input:
         Cryptogram -> input.cryptogram
         Card       -> pk = s.publicKey ?: getPublicKey().publicKey.also { cache }
-                      Cryptogram.build(pk, input.card, BrowserInfo.collectBase64())
+                      Cryptogram.build(pk, s.id, input.card, BrowserInfo.collectBase64())
     raw: JsonObject = POST api/intent/pay/  { id, paymentMethod = "Card", cryptogram }
     threeDsUrl = raw["threeDsUrl"] as? String
     if (threeDsUrl != null)
@@ -803,7 +805,7 @@ internal suspend fun <T> pollUntil(
 Файл: `internal/crypto/Cryptogram.kt`. **Самая критичная часть для паритета** — Swift обязан
 выдать байт-в-байт совместимый конверт.
 
-### Алгоритм `build(publicKeyPem, card, browserInfoBase64 = "", keyVersion = 1): String`
+### Алгоритм `build(publicKeyPem, uuid, card, browserInfoBase64 = "", keyVersion = 1): String`
 
 1. Нормализация: `pan`, `cvv`, `expMonth`, `expYear` — **только цифры** (`filter(Char::isDigit)`).
 2. Валидация: `pan.length < 13` → `YpException("cryptogram: invalid PAN")`.
@@ -815,6 +817,7 @@ internal suspend fun <T> pollUntil(
 5. Конверт:
    ```json
    {
+     "uuid": "<intent_id>",
      "Type": "Card",
      "BrowserInfoBase64": "<browserInfoBase64>",
      "CardInfo": {
@@ -828,7 +831,7 @@ internal suspend fun <T> pollUntil(
    }
    ```
    Сериализация конверта — `Json { encodeDefaults = true }` (все поля присутствуют).
-   Порядок ключей — как в DTO (`Type, BrowserInfoBase64, CardInfo, KeyVersion, Value`),
+   Порядок ключей — как в DTO (`uuid, Type, BrowserInfoBase64, CardInfo, KeyVersion, Value`),
    а `CardInfo`: `FirstSixDigits, LastFourDigits, ExpDateYear, ExpDateMonth`.
 6. Результат: `base64( utf8( JSON(конверт) ) )` — это и есть строка криптограммы,
    которая уходит как `PayInput.Cryptogram` / поле `cryptogram` тела `pay`.
@@ -844,8 +847,8 @@ Swift (`Security.framework`): `SecKeyCreateEncryptedData` с алгоритмо�
 что это **OAEP c SHA-256 и MGF1-SHA-256, без label** — иначе бэкенд не расшифрует.
 
 ### Проверочный вектор (из `CryptogramTest`)
-- Вход: `CardData(pan="4652 0354 4066 7037", expMonth="12", expYear="25", cvv="123")`.
-- Конверт после декода base64 → JSON: `Type="Card"`, `BrowserInfoBase64=""` (в тесте передан дефолт),
+- Вход: `uuid="intent-1"`, `CardData(pan="4652 0354 4066 7037", expMonth="12", expYear="25", cvv="123")`.
+- Конверт после декода base64 → JSON: `uuid="intent-1"`, `Type="Card"`, `BrowserInfoBase64=""` (в тесте передан дефолт),
   `KeyVersion=1`, `CardInfo.FirstSixDigits="465203"` (пробелы вычищены), `LastFourDigits="7037"`,
   `ExpDateYear="25"`, `ExpDateMonth="12"`, `Value` — непустой base64.
 - Расшифровка `Value` приватным ключом → строго `{"PAN":"4652035440667037","cvv":"123"}`.
@@ -1080,6 +1083,7 @@ Swift-порт: `WKWebView`; мост через `WKUserContentController` (`add
 | `CreateAndUpdateTest.update_sends_json_patch_with_secret` | PATCH на `/api/intent/{id}/`, заголовок `X-Intent-Secret`, тело содержит `"/receiptEmail"` |
 | `CreateAndUpdateTest.coalesces_concurrent_updates_into_one_patch` | два конкурентных `update` → **один** PATCH с обеими операциями (`/receiptEmail` и `/tokenize`) |
 | `PayTest.pay_with_cryptogram_authorized` | тело `pay` содержит `"paymentMethod":"Card"`; успех → `Authorized` |
+| `PayTest.pay_with_card_puts_intent_id_in_cryptogram` | криптограмма для `PayInput.Card` содержит `uuid` текущего интента |
 | `PayTest.pay_returns_3ds_required` | ответ `{threeDsUrl}` → `ThreeDsRequired(url)` |
 | `AltPayTest.fasterPayments_exposes_banks_and_getLink` | `banks` заполнен; `getImage()` = URL; `getLink(schema=...)` → GET `/alt/i1/link/FasterPayments/?schema=bank100000`, возвращает plain-text deeplink |
 | `AltPayTest.fromType_maps_known_and_unknown` | `fromType("SberPay")`/`"FasterPayments"` → метод; неизвестный → `null` |

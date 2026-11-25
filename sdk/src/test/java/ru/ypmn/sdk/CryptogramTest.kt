@@ -19,10 +19,11 @@ QAldMLj0PA36kINEbuDKq8qRh25v+k4qyjb7Xp4W2DywmNtG3Q20MQIDAQAB
 
     @Test fun envelope_has_web_sdk_structure() {
         val card = CardData(pan = "4652 0354 4066 7037", expMonth = "12", expYear = "25", cvv = "123")
-        val packet = Cryptogram.build(pem, card)
+        val packet = Cryptogram.build(pem, "intent-1", card)
         // Внешняя обёртка — base64(JSON(конверт))
         val envJson = packet.decodeBase64()!!.utf8()
         val env = Json.parseToJsonElement(envJson).jsonObject
+        assertEquals("intent-1", env["uuid"]!!.jsonPrimitive.content)
         assertEquals("Card", env["Type"]!!.jsonPrimitive.content)
         assertEquals("", env["BrowserInfoBase64"]!!.jsonPrimitive.content)     // как CloudPayments
         assertEquals(1, env["KeyVersion"]!!.jsonPrimitive.int)
@@ -41,7 +42,7 @@ QAldMLj0PA36kINEbuDKq8qRh25v+k4qyjb7Xp4W2DywmNtG3Q20MQIDAQAB
         val pubPem = "-----BEGIN PUBLIC KEY-----\n" +
             kp.public.encoded.toByteString().base64() + "\n-----END PUBLIC KEY-----"
         val card = CardData("4652 0354 4066 7037", "12", "25", "123")
-        val packet = Cryptogram.build(pubPem, card)
+        val packet = Cryptogram.build(pubPem, "intent-1", card)
         val env = Json.parseToJsonElement(packet.decodeBase64()!!.utf8()).jsonObject
         val cipherText = env["Value"]!!.jsonPrimitive.content.decodeBase64()!!.toByteArray()
         val oaep = javax.crypto.spec.OAEPParameterSpec(

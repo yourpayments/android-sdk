@@ -36,7 +36,7 @@ dependencies {
 publishing {
     publications {
         register<MavenPublication>("release") {
-            groupId = "com.github.onemantooo.android-sdk"
+            groupId = "com.github.yourpayments.android-sdk"
             artifactId = "sdk"
             version = "0.0.1"
             afterEvaluate { from(components["release"]) }

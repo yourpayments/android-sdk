@@ -13,6 +13,15 @@ class DtoSerializationTest {
         assertEquals("""{"merchantCode":"t1","amount":100000,"currency":"RUB","messageScheme":"SMS"}""", s)
     }
 
+    @Test fun createIntentRequest_serializes_tokenization_flow() {
+        val req = CreateIntentRequest(
+            merchantCode = "t1", amount = 100000, currency = "RUB", messageScheme = "SMS",
+            tokenizationFlow = "Force",
+        )
+        val s = json.encodeToString(CreateIntentRequest.serializer(), req)
+        assertTrue(s, s.contains("\"tokenizationFlow\":\"Force\""))
+    }
+
     @Test fun createIntentRequest_serializes_fiscal_and_meta_fields() {
         val req = CreateIntentRequest(
             merchantCode = "t1", amount = 100000, currency = "RUB", messageScheme = "SMS",
@@ -70,5 +79,11 @@ class DtoSerializationTest {
         val r = json.decodeFromString(IntentResponse.serializer(), raw)
         assertEquals("i1", r.id)
         assertEquals("RequiresPaymentData", r.status)
+    }
+
+    @Test fun intentResponse_parses_tokenization_flow() {
+        val raw = """{"id":"i1","status":"RequiresPaymentData","tokenizationFlow":"Optional"}"""
+        val r = json.decodeFromString(IntentResponse.serializer(), raw)
+        assertEquals("Optional", r.tokenizationFlow)
     }
 }

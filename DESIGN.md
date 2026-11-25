@@ -53,7 +53,7 @@ NX-монорепо). Причины: публичный артефакт для
 
 ## 4. Именование и упаковка
 
-- **Координаты (JitPack):** `com.github.onemantooo.android-sdk:sdk:<tag>` — на JitPack
+- **Координаты (JitPack):** `com.github.yourpayments.android-sdk:sdk:<tag>` — на JitPack
   groupId выводится из хоста+владельца репо (GitHub `origin`), artifactId = имя модуля.
   Чистый `ru.ypmn:sdk` на JitPack недостижим (для него нужен Maven Central или
   self-hosted Git на ypmn-домене — как `gitpub.cloudpayments.ru` у CP).
@@ -268,7 +268,7 @@ PAN/CVV уходят только в криптограмме.
 ```
 Cipher: "RSA/ECB/OAEPWithSHA-256AndMGF1Padding"   // == crypto.subtle RSA-OAEP, SHA-256
 Шифруемый payload: JSON {"PAN": "<digits>", "cvv": "<digits>"}   // только PAN+CVV
-Конверт: { Type:"Card", BrowserInfoBase64:"" (как CP), CardInfo{FirstSixDigits,LastFourDigits,ExpDateYear,ExpDateMonth}, KeyVersion, Value }
+Конверт: { uuid:"<intent_id>", Type:"Card", BrowserInfoBase64:"" (как CP), CardInfo{FirstSixDigits,LastFourDigits,ExpDateYear,ExpDateMonth}, KeyVersion, Value }
 Внешняя обёртка: base64(JSON(конверт))            // == strToBase64(JSON.stringify(...))
 ```
 
@@ -276,7 +276,7 @@ Cipher: "RSA/ECB/OAEPWithSHA-256AndMGF1Padding"   // == crypto.subtle RSA-OAEP, 
   иначе `FirstSixDigits` ломается.
 - `KeyVersion` — по умолчанию 1 (как web-sdk; не CP-шный "04").
 - Публичный ключ берём из `getPublicKey` (API), кэшируем в сессии.
-- **Cross-language test-vector** (обязательно): фикс `(publicKey, card)` → проверяем,
+- **Cross-language test-vector** (обязательно): фикс `(publicKey, uuid, card)` → проверяем,
   что структура конверта Kotlin совпадает с TS (Type, набор полей CardInfo, что
   Value — валидный OAEP-base64, что внешняя обёртка декодится в тот же JSON).
 
@@ -322,7 +322,7 @@ saveCard?}`). Делаем так же: **`BrowserInfoBase64 = ""`**, без с�
 - **JitPack**: публикация сборкой из git-тега. `jitpack.yml` фиксирует JDK 17; модуль
   `:sdk` применяет `maven-publish` с `release`-компонентом (JitPack его подхватывает).
 - Подключение у мерча: репозиторий `maven { url 'https://jitpack.io' }` +
-  `implementation("com.github.onemantooo.android-sdk:sdk:<tag>")`.
+  `implementation("com.github.yourpayments.android-sdk:sdk:<tag>")`.
 - Dokka → API-доки. `consumer-rules.pro` для R8/ProGuard (DTO/serialization).
 - Java-фасад: `kotlinx-coroutines-guava` (`ListenableFuture`) — в составе того же `:sdk` артефакта.
 - CI: lint + unit + (на эмуляторе) instrumented + сборка `:sample`; релиз = git-тег

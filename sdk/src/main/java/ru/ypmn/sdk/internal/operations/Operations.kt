@@ -41,8 +41,10 @@ internal suspend fun pay(s: IntentSession, input: PayInput): PayResult = s.queue
                     res.publicKey
                 }
                 ru.ypmn.sdk.internal.crypto.Cryptogram.build(
-                    pk, input.card,
-                    ru.ypmn.sdk.internal.crypto.BrowserInfo.collectBase64(),
+                    publicKeyPem = pk,
+                    uuid = s.id,
+                    card = input.card,
+                    browserInfoBase64 = ru.ypmn.sdk.internal.crypto.BrowserInfo.collectBase64(),
                     keyVersion = s.publicKeyVersion ?: 1,
                 )
             }
