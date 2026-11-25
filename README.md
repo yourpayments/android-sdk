@@ -18,7 +18,7 @@ dependencyResolutionManagement {
 ```
 `build.gradle.kts` модуля:
 ```kotlin
-implementation("com.github.onemantooo.android-sdk:sdk:<tag>")
+implementation("com.github.yourpayments.android-sdk:sdk:<tag>")
 ```
 
 ## Оплата картой (+3DS)

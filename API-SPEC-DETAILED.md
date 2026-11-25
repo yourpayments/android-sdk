@@ -93,7 +93,7 @@ Gradle-модули:
 | `ru.ypmn.sdk.internal.crypto` | internal | `Cryptogram`, `BrowserInfo` |
 | `ru.ypmn.sdk.internal.operations` | internal | функции операций (`pay`, `update`, `getStatus`, `getPaymentMethod`, `waitForResult`) |
 
-Координаты публикации (JitPack): `com.github.onemantooo.android-sdk:sdk:<tag>`.
+Координаты публикации (JitPack): `com.github.yourpayments.android-sdk:sdk:<tag>`.
 Namespace кода — `ru.ypmn.sdk` (не зависит от координат).
 
 `YP_API_URL` по умолчанию (`BuildConfig`): `https://ypmn.ru`. `minSdk 24`, `compileSdk 35`, Java 17, Kotlin 2.1.0.

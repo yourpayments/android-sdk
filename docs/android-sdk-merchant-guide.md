@@ -163,7 +163,7 @@ dependencyResolutionManagement {
 `build.gradle.kts` модуля приложения:
 
 ```kotlin
-implementation("com.github.onemantooo.android-sdk:sdk:<tag>")
+implementation("com.github.yourpayments.android-sdk:sdk:<tag>")
 ```
 
 Актуальный `<tag>` (версия релиза) вам сообщит менеджер.

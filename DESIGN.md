@@ -53,7 +53,7 @@ NX-монорепо). Причины: публичный артефакт для
 
 ## 4. Именование и упаковка
 
-- **Координаты (JitPack):** `com.github.onemantooo.android-sdk:sdk:<tag>` — на JitPack
+- **Координаты (JitPack):** `com.github.yourpayments.android-sdk:sdk:<tag>` — на JitPack
   groupId выводится из хоста+владельца репо (GitHub `origin`), artifactId = имя модуля.
   Чистый `ru.ypmn:sdk` на JitPack недостижим (для него нужен Maven Central или
   self-hosted Git на ypmn-домене — как `gitpub.cloudpayments.ru` у CP).
@@ -322,7 +322,7 @@ saveCard?}`). Делаем так же: **`BrowserInfoBase64 = ""`**, без с�
 - **JitPack**: публикация сборкой из git-тега. `jitpack.yml` фиксирует JDK 17; модуль
   `:sdk` применяет `maven-publish` с `release`-компонентом (JitPack его подхватывает).
 - Подключение у мерча: репозиторий `maven { url 'https://jitpack.io' }` +
-  `implementation("com.github.onemantooo.android-sdk:sdk:<tag>")`.
+  `implementation("com.github.yourpayments.android-sdk:sdk:<tag>")`.
 - Dokka → API-доки. `consumer-rules.pro` для R8/ProGuard (DTO/serialization).
 - Java-фасад: `kotlinx-coroutines-guava` (`ListenableFuture`) — в составе того же `:sdk` артефакта.
 - CI: lint + unit + (на эмуляторе) instrumented + сборка `:sample`; релиз = git-тег
